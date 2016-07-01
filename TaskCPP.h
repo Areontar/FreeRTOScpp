@@ -213,7 +213,7 @@ private:
    * Trampoline for task.
    *
    * @todo Note, is a static function so normally compatible by calling convention 
-   * with an ordinary C function, like FreeRTOS expects. For maximum portablity
+   * with an ordinary C function, like FreeRTOS expects. For maximum portability
    * we can change this to a free function declared as extern "C"
    */
   static void taskfun(void* parm) {
@@ -229,4 +229,33 @@ private:
   }
 };
 
+/**
+* @brief Scheduled Task function
+* Will execute a task until stop with a delay between runs
+*/
+class ScheduledTaskClass : public TaskClass {
+	public:
+	TickType_t xfrequency;
+	private:
+	volatile bool keepRunning = true;
+	
+	public:
+	ScheduledTaskClass(char const*name,TaskPriority priority,
+					   unsigned portSHORT stackDepth, TickType_t frequency) :
+	TaskClass(name, priority, stackDepth)
+	{
+		xfrequency = frequency;
+	}
+	
+	void stop(){keepRunning = false;}
+	
+	virtual void scheduledtask() = 0;
+	
+	void task() {
+		while(keepRunning) {
+			scheduledtask();
+			vTaskDelay(xfrequency);
+		}
+	}
+	};
 #endif
